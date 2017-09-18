@@ -1,6 +1,8 @@
 package home.rxjavatest;
 
 import android.app.DatePickerDialog;
+import android.app.NotificationManager;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -59,8 +61,12 @@ public class MainActivity extends AppCompatActivity {
 
         mySpinner = new MySpinner(this);
 
-        MyTask task = new MyTask();
-        task.execute("doInBackground");
+//        MyTask task = new MyTask();
+//        task.execute("doInBackground");
+
+        if (!NotificationService.isStarted) {
+            startService(new Intent(this, NotificationService.class));
+        }
 
  //       new Handler(Looper.getMainLooper()). postAtTime(() -> {},1000);
 
@@ -189,10 +195,19 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Log.d("TAG","onNewIntent");
+    }
+
 
     @Override
     protected void onDestroy() {
         disposables.dispose();
+        if (NotificationService.isStarted) {
+            stopService(new Intent(this, NotificationService.class));
+        }
         super.onDestroy();
     }
 

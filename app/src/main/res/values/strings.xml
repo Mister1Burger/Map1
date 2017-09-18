@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">RxJavaTest</string>
     <string name="action_settings">Settings</string>
+
+    <string name="CHAT_MESSAGE_NOTIFICATION_TITLE">New message</string>
+    <string name="CHAT_MESSAGE_NOTIFICATION_BODY">You have a new message from %1$s %2$s</string>
 </resources>
