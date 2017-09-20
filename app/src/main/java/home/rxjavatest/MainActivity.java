@@ -3,6 +3,7 @@ package home.rxjavatest;
 import android.app.DatePickerDialog;
 import android.app.NotificationManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -60,6 +61,10 @@ public class MainActivity extends AppCompatActivity {
         fab.setVisibility(View.GONE);
 
         mySpinner = new MySpinner(this);
+
+        SharedPreferences sharedPreferences = getSharedPreferences("base", MODE_PRIVATE);
+        sharedPreferences.edit().putString("test", "test").apply();
+        String test = sharedPreferences.getString("test","");
 
 //        MyTask task = new MyTask();
 //        task.execute("doInBackground");
