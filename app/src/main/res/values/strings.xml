@@ -4,4 +4,6 @@
 
     <string name="CHAT_MESSAGE_NOTIFICATION_TITLE">New message</string>
     <string name="CHAT_MESSAGE_NOTIFICATION_BODY">You have a new message from %1$s %2$s</string>
+
+    <string name="key_for_release" translatable="false">AIzaSyCvAXlBtcgd63B9I2KKczHYzM3jVfVar7M</string>
 </resources>
