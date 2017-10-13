@@ -122,9 +122,6 @@ public class TrackingGuideFragment extends Fragment {
             marker.remove();
             return true;});
     }
-    private void removeMarker(){
-
-    }
 
     private long markerId(){
         List<MyMarker> list = realmReminder.readeReminders(getActivity());
