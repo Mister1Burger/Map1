@@ -3,6 +3,8 @@ package home.rxjavatest;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -43,6 +45,8 @@ public class TrackingGuideFragment extends Fragment {
 
     public Context context;
 
+    SharedPreferences sPref;
+
     private List<Polyline> polylines = new ArrayList<>();
     private static final int[] COLORS = new int[]{R.color.colorAccent,
             R.color.colorPrimary,
@@ -50,10 +54,13 @@ public class TrackingGuideFragment extends Fragment {
             android.R.color.holo_purple,
             android.R.color.holo_orange_light};
 
-    float zoom = 20;
+    float zoom = 30;
 
     @BindView(R2.id.mapView)
     MapView mapView;
+
+    RealmReminder realmReminder;
+    List<LatLng> list;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -70,6 +77,8 @@ public class TrackingGuideFragment extends Fragment {
         mapView.onCreate(savedInstanceState);
         mapView.onLowMemory();
         MapsInitializer.initialize(context);
+
+        sPref = getActivity().getSharedPreferences("coordinates", Context.MODE_PRIVATE);
 
 
         return mapFragmentView;
@@ -89,22 +98,61 @@ public class TrackingGuideFragment extends Fragment {
         UiSettings myUiSettings = googleMap.getUiSettings();
         myUiSettings.setZoomControlsEnabled(true);
 
-        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(48.0006,
-                32.0005), zoom));
+        realmReminder = new RealmReminder();
+
+        list = getAll();
+        if(list.size()>0) {
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(list.get(0), zoom));
+            for (LatLng ll: list)
+            myMarkerPlot(ll.latitude,ll.longitude);
+        } else googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(32.002, 48.004), zoom));
 
         googleMap.setOnCameraMoveListener(() -> zoom = googleMap.getCameraPosition().zoom);
 
-        googleMap.setOnMapClickListener(latLng -> myMarkerPlot(latLng.latitude,latLng.longitude));
+        googleMap.setOnMapClickListener(latLng -> {
+            myMarkerPlot(latLng.latitude,latLng.longitude);
+            dbsave(latLng);
+        });
 
+        googleMap.setOnMarkerClickListener(marker ->{
+            LatLng markerLL = marker.getPosition();
+            realmReminder.readeReminders(context).stream()
+                    .filter(e -> markerLL.latitude == e.getLatitude() && markerLL.longitude == e.getLongitude())
+                    .forEach(e -> realmReminder.removeReminder(getActivity(), e.getId()));
+            marker.remove();
+            return true;});
     }
 
+    private long markerId(){
+        List<MyMarker> list = realmReminder.readeReminders(getActivity());
+        if (list.size()>0) return list.get(list.size()-1).getId()+1;
+        else return 1;
+    }
+    public void dbsave(LatLng latLng){
+//        RealmReminder realmReminder = new RealmReminder();
+        MyMarker myMarker = new MyMarker();
+        myMarker.setId(markerId());
+        myMarker.setLatitude(latLng.latitude);
+        myMarker.setLongitude(latLng.longitude);
+        realmReminder.saveReminder(context, myMarker);
+    }
+
+    public List<LatLng> getAll(){
+//        RealmReminder realmReminder = new RealmReminder();
+        list = new ArrayList<>();
+        for (MyMarker e:realmReminder.readeReminders(context)) {
+            LatLng latLng = new LatLng(e.getLatitude(), e.getLongitude());
+            list.add(latLng);
+        }
+        return list;
+    }
 
     public void myMarkerPlot(double lat, double lon) {
 
             if (lat != 0 && lon != 0) {
 
-                if (myMarkerMap != null)
-                    myMarkerMap.remove();
+//                if (myMarkerMap != null)
+//                    myMarkerMap.remove();
 
                 MarkerOptions usMarker = new MarkerOptions().position(
                         new LatLng(lat, lon)).title("I").anchor(Float.parseFloat("0.5"), Float.parseFloat("0.5"));
@@ -112,7 +160,7 @@ public class TrackingGuideFragment extends Fragment {
                 myMarkerMap = googleMap.addMarker(usMarker);
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat,
                         lon), zoom));
-                meetingPointMarkerPlot(lat,lon);
+//                meetingPointMarkerPlot(lat,lon);
             }
     }
 

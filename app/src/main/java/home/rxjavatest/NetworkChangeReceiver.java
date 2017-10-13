@@ -13,7 +13,7 @@ public class NetworkChangeReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, final Intent intent) {
         if(hasConnection(context))
             if (!NotificationService.isStarted) {
-                context.startService(new Intent(context, NotificationService.class));
+//                context.startService(new Intent(context, NotificationService.class));
             }
     }
 
