@@ -122,11 +122,7 @@ public class TrackingGuideFragment extends Fragment {
             return true;});
     }
 
-    private String markerId(){
-        List<MyMarker> list = realmReminder.readeMarkers(getActivity());
-        if (list.size()>0) return list.get(list.size()-1).getId();
-        else return null;
-    }
+    
     public void dbsave(LatLng latLng){
 //        RealmReminder realmReminder = new RealmReminder();
         MyMarker myMarker = new MyMarker();
