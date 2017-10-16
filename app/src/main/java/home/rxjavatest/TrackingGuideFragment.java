@@ -4,7 +4,6 @@ package home.rxjavatest;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -54,12 +53,12 @@ public class TrackingGuideFragment extends Fragment {
             android.R.color.holo_purple,
             android.R.color.holo_orange_light};
 
-    float zoom = 30;
+    float zoom = 20;
 
     @BindView(R2.id.mapView)
     MapView mapView;
 
-    RealmReminder realmReminder;
+    RealmMarkers realmReminder;
     List<LatLng> list;
 
     @Override
@@ -98,7 +97,7 @@ public class TrackingGuideFragment extends Fragment {
         UiSettings myUiSettings = googleMap.getUiSettings();
         myUiSettings.setZoomControlsEnabled(true);
 
-        realmReminder = new RealmReminder();
+        realmReminder = new RealmMarkers();
 
         list = getAll();
         if(list.size()>0) {
@@ -116,31 +115,31 @@ public class TrackingGuideFragment extends Fragment {
 
         googleMap.setOnMarkerClickListener(marker ->{
             LatLng markerLL = marker.getPosition();
-            realmReminder.readeReminders(context).stream()
+            realmReminder.readeMarkers(context).stream()
                     .filter(e -> markerLL.latitude == e.getLatitude() && markerLL.longitude == e.getLongitude())
-                    .forEach(e -> realmReminder.removeReminder(getActivity(), e.getId()));
+                    .forEach(e -> realmReminder.removeMarker(getActivity(), e.getLatitude(),e.getLongitude()));
             marker.remove();
             return true;});
     }
 
-    private long markerId(){
-        List<MyMarker> list = realmReminder.readeReminders(getActivity());
-        if (list.size()>0) return list.get(list.size()-1).getId()+1;
-        else return 1;
+    private String markerId(){
+        List<MyMarker> list = realmReminder.readeMarkers(getActivity());
+        if (list.size()>0) return list.get(list.size()-1).getId();
+        else return null;
     }
     public void dbsave(LatLng latLng){
 //        RealmReminder realmReminder = new RealmReminder();
         MyMarker myMarker = new MyMarker();
-        myMarker.setId(markerId());
         myMarker.setLatitude(latLng.latitude);
         myMarker.setLongitude(latLng.longitude);
-        realmReminder.saveReminder(context, myMarker);
+        myMarker.setId(latLng.latitude,latLng.longitude);
+        realmReminder.saveMarker(context, myMarker);
     }
 
     public List<LatLng> getAll(){
 //        RealmReminder realmReminder = new RealmReminder();
         list = new ArrayList<>();
-        for (MyMarker e:realmReminder.readeReminders(context)) {
+        for (MyMarker e:realmReminder.readeMarkers(context)) {
             LatLng latLng = new LatLng(e.getLatitude(), e.getLongitude());
             list.add(latLng);
         }
