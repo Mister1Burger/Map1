@@ -10,6 +10,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.directions.route.AbstractRouting;
 import com.directions.route.Route;
@@ -54,12 +57,23 @@ public class TrackingGuideFragment extends Fragment {
             android.R.color.holo_orange_light};
 
     float zoom = 20;
+    @BindView(R2.id.et_longitude)
+    EditText et_longitude;
+    @BindView(R2.id.et_latitude)
+    EditText et_latitude;
+    @BindView(R2.id.add_button)
+    Button add_button;
+    @BindView(R2.id.show_button)
+    Button show_button;
+    @BindView(R2.id.remove_button)
+    Button remove_button;
 
     @BindView(R2.id.mapView)
     MapView mapView;
 
     RealmMarkers realmReminder;
     List<LatLng> list;
+    List<Marker> markers;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,9 +101,80 @@ public class TrackingGuideFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        activity = (MainActivity) getActivity();
 
+        activity = (MainActivity) getActivity();
+        add_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                double latd = 0;
+                double lond = 0;
+                String lons = et_longitude.getText().toString();
+                if (lons.length() == 0) {
+                    Toast toast = Toast.makeText(context,
+                            "Enter the Longitude", Toast.LENGTH_SHORT);
+                    toast.show();
+                } else {
+                    lond = Double.parseDouble(lons);
+                    et_longitude.setText(null);
+
+                }
+                String lats = et_latitude.getText().toString();
+                if (lats.length() == 0) {
+                    Toast toast = Toast.makeText(context,
+                            "Enter the Latitude", Toast.LENGTH_SHORT);
+                    toast.show();
+                } else {
+                    latd = Double.parseDouble(lats);
+                    et_latitude.setText(null);
+
+                }
+
+
+                AddMarkerToBase(latd, lond);
+                Log.d("MARKER", "Lat =" + String.valueOf(latd) + " " + "Long =" + String.valueOf(lond));
+
+            }
+        });
+
+        show_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                list = new ArrayList<>();
+                for (MyMarker e : realmReminder.readeMarkers(context)) {
+                    LatLng latLng = new LatLng(e.getLatitude(), e.getLongitude());
+                    myMarkerPlot(latLng.latitude, latLng.longitude);
+
+
+                }
+
+            }
+
+        });
+
+        remove_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                for (MyMarker e : realmReminder.readeMarkers(context)) {
+                    LatLng latLng = new LatLng(e.getLatitude(), e.getLongitude());
+                    RemoveMarker(latLng.latitude, latLng.longitude);
+                    googleMap.clear();
+
+
+
+
+
+                 realmReminder.readeMarkers(context);
+
+
+
+
+
+                }
+
+            }
+        });
     }
+
 
     private void initGoogleMap() {
 
@@ -99,20 +184,20 @@ public class TrackingGuideFragment extends Fragment {
 
         realmReminder = new RealmMarkers();
 
-        list = getAll();
-        if(list.size()>0) {
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(list.get(0), zoom));
-            for (LatLng ll: list)
-            myMarkerPlot(ll.latitude,ll.longitude);
-        } else googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(32.002, 48.004), zoom));
+//        list = getAll();
+//        if(list.size()>0) {
+//            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(list.get(0), zoom));
+//            for (LatLng ll: list)
+//            myMarkerPlot(ll.latitude,ll.longitude);
+//        } else googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(32.002, 48.004), zoom));
+//
+//        googleMap.setOnCameraMoveListener(() -> zoom = googleMap.getCameraPosition().zoom);
 
-        googleMap.setOnCameraMoveListener(() -> zoom = googleMap.getCameraPosition().zoom);
-
-        googleMap.setOnMapClickListener(latLng -> {
-            myMarkerPlot(latLng.latitude,latLng.longitude);
-            dbsave(latLng);
-        });
-
+//        googleMap.setOnMapClickListener(latLng -> {
+//            myMarkerPlot(latLng.latitude,latLng.longitude);
+//            dbsave(latLng);
+//        });
+//
         googleMap.setOnMarkerClickListener(marker ->{
             LatLng markerLL = marker.getPosition();
             realmReminder.readeMarkers(context).stream()
@@ -122,7 +207,7 @@ public class TrackingGuideFragment extends Fragment {
             return true;});
     }
 
-    
+
     public void dbsave(LatLng latLng){
 //        RealmReminder realmReminder = new RealmReminder();
         MyMarker myMarker = new MyMarker();
@@ -262,4 +347,17 @@ public class TrackingGuideFragment extends Fragment {
         mapView.onLowMemory();
         System.gc();
     }
-}
+    public void AddMarkerToBase (double latitude, double longitude){
+        MyMarker marker = new MyMarker();
+        marker.setLatitude(latitude);
+        marker.setLongitude(longitude);
+        marker.setId(latitude,longitude);
+        realmReminder.saveMarker(context,marker);
+    }
+    public void RemoveMarker (double latitude, double longitude){
+        realmReminder.removeMarker(context,latitude,longitude);
+    }
+
+
+    }
+
